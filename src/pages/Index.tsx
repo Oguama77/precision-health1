@@ -1,11 +1,12 @@
 import { useState } from 'react';
-import { Upload, Camera, FileText, User, Clock, Sparkles } from 'lucide-react';
+import { Upload, Camera, FileText, User, Clock, Sparkles, Download, MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 
 const Index = () => {
   const [formData, setFormData] = useState({
@@ -17,6 +18,7 @@ const Index = () => {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisResult, setAnalysisResult] = useState<any>(null);
+  const [chatMessage, setChatMessage] = useState('');
   const { toast } = useToast();
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -89,6 +91,55 @@ const Index = () => {
     setSelectedImage(null);
     setImagePreview(null);
     setAnalysisResult(null);
+  };
+
+  const downloadReport = () => {
+    const reportContent = `
+PRECISION DERMATOLOGY CONSULTATION REPORT
+=========================================
+
+Patient: ${formData.name}
+Date: ${new Date().toLocaleDateString()}
+Symptoms Duration: ${formData.duration}
+Symptoms Description: ${formData.symptoms}
+
+ANALYSIS RESULTS:
+${analysisResult.map((result: any, index: number) => `
+${index + 1}. ${result.condition} (${result.confidence}% confidence)
+   Severity: ${result.severity}
+   Description: ${result.description}
+   
+   Recommendations:
+   ${result.recommendations.map((rec: string) => `   • ${rec}`).join('\n')}
+`).join('\n')}
+
+DISCLAIMER: This AI analysis is for informational purposes only and should not replace professional medical advice. Please consult with a qualified dermatologist for proper diagnosis and treatment.
+    `;
+
+    const blob = new Blob([reportContent], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `precision-dermatology-report-${formData.name.replace(/\s+/g, '-').toLowerCase()}-${new Date().toISOString().split('T')[0]}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    toast({
+      title: "Report Downloaded",
+      description: "Your consultation report has been downloaded successfully.",
+    });
+  };
+
+  const handleChatSubmit = () => {
+    if (chatMessage.trim()) {
+      toast({
+        title: "Message Sent",
+        description: "Your message has been sent to our dermatology team. We'll get back to you soon.",
+      });
+      setChatMessage('');
+    }
   };
 
   return (
@@ -320,10 +371,55 @@ const Index = () => {
               </p>
             </div>
 
-            <div className="flex gap-4 justify-center">
+            <div className="flex gap-4 justify-center flex-wrap">
+              <Button
+                onClick={downloadReport}
+                className="bg-[#613175] hover:bg-purple-700 text-white px-6 py-2 font-inter flex items-center gap-2"
+              >
+                <Download className="h-4 w-4" />
+                Download Report
+              </Button>
+
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button
+                    className="bg-gradient-to-r from-[#613175] to-purple-600 hover:from-purple-700 hover:to-purple-800 text-white px-6 py-2 font-inter flex items-center gap-2"
+                  >
+                    <MessageSquare className="h-4 w-4" />
+                    Chat with Dermatologist
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-md">
+                  <DialogHeader>
+                    <DialogTitle className="font-playfair text-[#613175]">Chat with Dermatologist</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    <p className="text-sm text-gray-600 font-inter">
+                      Send a message to our dermatology team for further consultation about your analysis.
+                    </p>
+                    <Textarea
+                      value={chatMessage}
+                      onChange={(e) => setChatMessage(e.target.value)}
+                      placeholder="Type your message or questions here..."
+                      className="min-h-[120px] border-purple-200 focus:border-[#613175] focus:ring-[#613175] font-inter"
+                    />
+                    <div className="flex gap-2 justify-end">
+                      <Button
+                        onClick={handleChatSubmit}
+                        disabled={!chatMessage.trim()}
+                        className="bg-[#613175] hover:bg-purple-700 text-white font-inter"
+                      >
+                        Send Message
+                      </Button>
+                    </div>
+                  </div>
+                </DialogContent>
+              </Dialog>
+
               <Button
                 onClick={resetForm}
-                className="bg-[#613175] hover:bg-purple-700 text-white px-8 py-2 font-inter"
+                variant="outline"
+                className="border-[#613175] text-[#613175] hover:bg-[#613175] hover:text-white px-6 py-2 font-inter"
               >
                 New Consultation
               </Button>
