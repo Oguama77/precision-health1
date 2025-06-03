@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import Index from '@/pages/Index';
 import Login from '@/pages/Login';
 import SignUp from '@/pages/SignUp';
+import ChatPage from '@/pages/ChatPage';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import NotFound from "./pages/NotFound";
 
@@ -25,6 +26,14 @@ const App = () => (
             element={
               <ProtectedRoute>
                 <Index />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/chat"
+            element={
+              <ProtectedRoute>
+                <ChatPage />
               </ProtectedRoute>
             }
           />

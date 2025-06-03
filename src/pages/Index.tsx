@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Upload, Camera, FileText, User, Clock, Sparkles, Download, MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -21,6 +22,7 @@ const Index = () => {
   const [analysisResult, setAnalysisResult] = useState<any>(null);
   const [chatMessage, setChatMessage] = useState('');
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -183,6 +185,14 @@ const Index = () => {
       });
       setChatMessage('');
     }
+  };
+
+  const handleChatClick = () => {
+    navigate('/chat', { 
+      state: { 
+        aiReport: analysisResult ? JSON.stringify(analysisResult) : undefined 
+      } 
+    });
   };
 
   return (
