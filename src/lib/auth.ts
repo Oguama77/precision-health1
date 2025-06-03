@@ -17,8 +17,9 @@ export const auth = {
       const response = await fetch(`${config.apiUrl}/token`, {
         method: 'POST',
         headers: {
-          'Accept': 'application/json',
+          'Accept': 'application/json'
         },
+        credentials: 'include',
         body: formData,
       });
 
@@ -59,11 +60,13 @@ export const auth = {
     formData.append('email', email);
     formData.append('password', password);
     formData.append('full_name', fullName);
+    formData.append('username', email); // Add username field for backend compatibility
 
     try {
       console.log('📤 Sending signup request to:', `${config.apiUrl}/signup`);
       const response = await fetch(`${config.apiUrl}/signup`, {
         method: 'POST',
+        credentials: 'include',
         body: formData,
       });
 
