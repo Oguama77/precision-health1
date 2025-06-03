@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { config } from '@/config';
 
 const Index = () => {
   const [formData, setFormData] = useState({
@@ -46,44 +47,48 @@ const Index = () => {
     }
 
     setIsAnalyzing(true);
+    setAnalysisResult(null);
     
-    // Simulate AI analysis
-    setTimeout(() => {
-      const mockResults = [
-        {
-          condition: "Mild Acne Vulgaris",
-          confidence: 87,
-          description: "Based on the image analysis, the skin shows characteristics of mild acne vulgaris with comedones and minor inflammatory lesions.",
-          recommendations: [
-            "Use a gentle salicylic acid cleanser twice daily",
-            "Apply benzoyl peroxide 2.5% gel to affected areas",
-            "Avoid touching or picking at lesions",
-            "Consider consulting a dermatologist for personalized treatment"
-          ],
-          severity: "Mild"
-        },
-        {
-          condition: "Post-inflammatory Hyperpigmentation",
-          confidence: 73,
-          description: "Secondary analysis indicates possible post-inflammatory hyperpigmentation in previously affected areas.",
-          recommendations: [
-            "Use sunscreen SPF 30+ daily",
-            "Consider vitamin C serum in the morning",
-            "Gentle exfoliation with AHA/BHA products",
-            "Consistent skincare routine for 6-8 weeks"
-          ],
-          severity: "Mild"
-        }
-      ];
+    try {
+      const formPayload = new FormData();
+      formPayload.append('image', selectedImage);
+      formPayload.append('name', formData.name);
+      formPayload.append('duration', formData.duration);
+      formPayload.append('symptoms', formData.symptoms);
+
+      const response = await fetch(`${config.apiUrl}/api/analyze`, {
+        method: 'POST',
+        body: formPayload,
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ detail: 'Failed to analyze image' }));
+        throw new Error(errorData.detail || 'Analysis failed');
+      }
+
+      const results = await response.json();
       
-      setAnalysisResult(mockResults);
-      setIsAnalyzing(false);
+      if (!Array.isArray(results) || results.length === 0) {
+        throw new Error('Invalid analysis results received');
+      }
+
+      setAnalysisResult(results);
       
       toast({
         title: "Analysis Complete",
         description: "Your skin analysis has been completed successfully.",
       });
-    }, 3000);
+    } catch (error) {
+      console.error('Analysis error:', error);
+      setAnalysisResult(null);
+      toast({
+        title: "Analysis Failed",
+        description: error instanceof Error ? error.message : "There was an error analyzing your skin condition. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsAnalyzing(false);
+    }
   };
 
   const resetForm = () => {
@@ -94,41 +99,70 @@ const Index = () => {
   };
 
   const downloadReport = () => {
-    const reportContent = `
-PRECISION DERMATOLOGY CONSULTATION REPORT
-=========================================
+    // Create a temporary div for the report
+    const reportDiv = document.createElement('div');
+    reportDiv.style.padding = '40px';
+    reportDiv.style.maxWidth = '800px';
+    reportDiv.style.margin = '0 auto';
+    reportDiv.style.fontFamily = 'Arial, sans-serif';
 
-Patient: ${formData.name}
-Date: ${new Date().toLocaleDateString()}
-Symptoms Duration: ${formData.duration}
-Symptoms Description: ${formData.symptoms}
+    // Add logo and header
+    reportDiv.innerHTML = `
+      <div style="text-align: center; margin-bottom: 30px;">
+        <img src="/logo_only.PNG" alt="Precision Logo" style="width: 120px; margin-bottom: 20px;" />
+        <h1 style="color: #613175; margin: 0; font-size: 24px;">PRECISION</h1>
+        <h2 style="color: #613175; margin: 10px 0; font-size: 20px;">DERMATOLOGY CONSULTATION REPORT</h2>
+      </div>
 
-ANALYSIS RESULTS:
-${analysisResult.map((result: any, index: number) => `
-${index + 1}. ${result.condition} (${result.confidence}% confidence)
-   Severity: ${result.severity}
-   Description: ${result.description}
-   
-   Recommendations:
-   ${result.recommendations.map((rec: string) => `   • ${rec}`).join('\n')}
-`).join('\n')}
+      <div style="margin-bottom: 30px;">
+        <p><strong>Patient:</strong> ${formData.name}</p>
+        <p><strong>Date:</strong> ${new Date().toLocaleDateString()}</p>
+        <p><strong>Symptoms Duration:</strong> ${formData.duration}</p>
+        <p><strong>Symptoms Description:</strong> ${formData.symptoms}</p>
+      </div>
 
-DISCLAIMER: This AI analysis is for informational purposes only and should not replace professional medical advice. Please consult with a qualified dermatologist for proper diagnosis and treatment.
+      <h3 style="color: #613175; margin-top: 30px;">ANALYSIS RESULTS</h3>
+      ${analysisResult.map((result: any, index: number) => `
+        <div style="margin: 20px 0; padding: 15px; border: 1px solid #e0e0e0; border-radius: 5px;">
+          <h4 style="color: #613175; margin-top: 0;">ASSESSMENT ${index + 1}</h4>
+          <p><strong>Severity:</strong> ${result.severity}</p>
+          <p><strong>Description:</strong> ${result.description}</p>
+          <p><strong>Recommendations:</strong></p>
+          <ul style="margin-top: 5px;">
+            ${result.recommendations.map((rec: string) => `
+              <li style="margin-bottom: 5px;">${rec}</li>
+            `).join('')}
+          </ul>
+        </div>
+      `).join('')}
+
+      <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #e0e0e0; font-size: 12px; color: #666;">
+        <p><strong>DISCLAIMER:</strong> This AI analysis is for informational purposes only and should not replace professional medical advice. Please consult with a qualified dermatologist for proper diagnosis and treatment.</p>
+      </div>
     `;
 
-    const blob = new Blob([reportContent], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `precision-dermatology-report-${formData.name.replace(/\s+/g, '-').toLowerCase()}-${new Date().toISOString().split('T')[0]}.txt`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    // Add the report to the document temporarily
+    document.body.appendChild(reportDiv);
+
+    // Print settings
+    const printSettings = {
+      margin: {
+        top: '20mm',
+        bottom: '20mm',
+        left: '20mm',
+        right: '20mm'
+      }
+    };
+
+    // Print the report
+    window.print();
+
+    // Remove the temporary div after printing
+    document.body.removeChild(reportDiv);
 
     toast({
-      title: "Report Downloaded",
-      description: "Your consultation report has been downloaded successfully.",
+      title: "Report Ready",
+      description: "Please save the report as PDF when the print dialog opens.",
     });
   };
 
@@ -150,8 +184,12 @@ DISCLAIMER: This AI analysis is for informational purposes only and should not r
           <div className="flex items-center justify-between">
             {/* Logo Space */}
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-gray-200 rounded-lg flex items-center justify-center border-2 border-dashed border-gray-300">
-                <span className="text-xs text-gray-500 font-medium">LOGO</span>
+              <div className="w-20 h-20 flex items-center justify-center">
+                <img 
+                  src="/logo_only.PNG" 
+                  alt="Precision Skin Insights Logo" 
+                  className="w-full h-full object-contain"
+                />
               </div>
               <div>
                 <h1 className="text-2xl font-bold text-[#613175] font-playfair">Precision</h1>
@@ -168,7 +206,15 @@ DISCLAIMER: This AI analysis is for informational purposes only and should not r
       </header>
 
       <div className="container mx-auto px-4 py-8 max-w-4xl">
-        {!analysisResult ? (
+        {isAnalyzing ? (
+          <div className="flex flex-col items-center justify-center space-y-4 min-h-[400px]">
+            <div className="w-16 h-16 border-4 border-purple-200 border-t-[#613175] rounded-full animate-spin"></div>
+            <h3 className="text-xl font-semibold text-gray-800">Analyzing Your Image</h3>
+            <p className="text-gray-600 text-center max-w-md">
+              Please wait while our AI analyzes your skin condition. This may take a few moments...
+            </p>
+          </div>
+        ) : !analysisResult ? (
           <div className="space-y-8">
             {/* Hero Section */}
             <div className="text-center space-y-4">
@@ -323,10 +369,7 @@ DISCLAIMER: This AI analysis is for informational purposes only and should not r
               <Card key={index} className="border-purple-200 shadow-lg">
                 <CardHeader className="bg-gradient-to-r from-[#613175] to-purple-600 text-white">
                   <CardTitle className="flex items-center justify-between font-playfair">
-                    <span>{result.condition}</span>
-                    <span className="bg-white/20 px-3 py-1 rounded-full text-sm font-inter">
-                      {result.confidence}% confidence
-                    </span>
+                    <span>Assessment {index + 1}</span>
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="p-6">
