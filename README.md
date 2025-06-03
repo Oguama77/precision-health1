@@ -1,6 +1,6 @@
-# Precision Skin Insights Backend
+# Precision Health
 
-This is the backend service for the Precision Skin Insights application, which provides AI-powered dermatological analysis using LangGraph and GPT-4 Vision.
+This is the code base for the Precision Health application, which provides AI-powered dermatological analysis using LangGraph and GPT-4 Vision.
 
 ## Setup
 
