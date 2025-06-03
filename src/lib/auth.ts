@@ -7,62 +7,107 @@ interface AuthResponse {
 
 export const auth = {
   async login(email: string, password: string): Promise<AuthResponse> {
+    console.log('🔐 Login attempt for email:', email);
     const formData = new FormData();
     formData.append('username', email); // OAuth2 expects 'username' field
     formData.append('password', password);
 
-    const response = await fetch(`${config.apiUrl}/api/token`, {
-      method: 'POST',
-      body: formData,
-    });
+    try {
+      console.log('📤 Sending login request to:', `${config.apiUrl}/api/token`);
+      const response = await fetch(`${config.apiUrl}/api/token`, {
+        method: 'POST',
+        body: formData,
+      });
 
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.detail || 'Failed to login');
+      console.log('📥 Login response status:', response.status);
+      const responseText = await response.text();
+      console.log('📥 Raw response:', responseText);
+
+      if (!response.ok) {
+        let errorDetail;
+        try {
+          const errorJson = JSON.parse(responseText);
+          errorDetail = errorJson.detail;
+        } catch (e) {
+          errorDetail = responseText;
+        }
+        console.error('❌ Login failed:', errorDetail);
+        throw new Error(errorDetail || 'Failed to login');
+      }
+
+      const data = JSON.parse(responseText);
+      console.log('✅ Login successful, token received');
+      localStorage.setItem('token', data.access_token);
+      return data;
+    } catch (error) {
+      console.error('❌ Login error:', error);
+      throw error;
     }
-
-    const data = await response.json();
-    localStorage.setItem('token', data.access_token);
-    return data;
   },
 
   async signup(email: string, password: string, fullName: string): Promise<AuthResponse> {
+    console.log('📝 Signup attempt for:', { email, fullName });
     const formData = new FormData();
     formData.append('email', email);
     formData.append('password', password);
     formData.append('full_name', fullName);
 
-    const response = await fetch(`${config.apiUrl}/api/signup`, {
-      method: 'POST',
-      body: formData,
-    });
+    try {
+      console.log('📤 Sending signup request to:', `${config.apiUrl}/api/signup`);
+      const response = await fetch(`${config.apiUrl}/api/signup`, {
+        method: 'POST',
+        body: formData,
+      });
 
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.detail || 'Failed to sign up');
+      console.log('📥 Signup response status:', response.status);
+      const responseText = await response.text();
+      console.log('📥 Raw response:', responseText);
+
+      if (!response.ok) {
+        let errorDetail;
+        try {
+          const errorJson = JSON.parse(responseText);
+          errorDetail = errorJson.detail;
+        } catch (e) {
+          errorDetail = responseText;
+        }
+        console.error('❌ Signup failed:', errorDetail);
+        throw new Error(errorDetail || 'Failed to sign up');
+      }
+
+      const data = JSON.parse(responseText);
+      console.log('✅ Signup successful, token received');
+      localStorage.setItem('token', data.access_token);
+      return data;
+    } catch (error) {
+      console.error('❌ Signup error:', error);
+      throw error;
     }
-
-    const data = await response.json();
-    localStorage.setItem('token', data.access_token);
-    return data;
   },
 
   logout() {
+    console.log('🚪 Logging out user');
     localStorage.removeItem('token');
     localStorage.removeItem('isAuthenticated');
   },
 
   getToken() {
-    return localStorage.getItem('token');
+    const token = localStorage.getItem('token');
+    console.log('🎟️ Token retrieved from storage:', token ? 'Present' : 'Not found');
+    return token;
   },
 
   isAuthenticated() {
-    return !!this.getToken();
+    const isAuth = !!this.getToken();
+    console.log('🔒 Authentication check:', isAuth ? 'Authenticated' : 'Not authenticated');
+    return isAuth;
   },
 
   // Add this to your API calls
   getAuthHeaders() {
     const token = this.getToken();
-    return token ? { Authorization: `Bearer ${token}` } : {};
+    const headers = token ? { Authorization: `Bearer ${token}` } : {};
+    console.log('📋 Auth headers:', headers);
+    return headers;
   }
 }; 

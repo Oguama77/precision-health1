@@ -23,8 +23,11 @@ from passlib.context import CryptContext
 from pydantic import BaseModel
 import json
 
-# Configure logging
-logging.basicConfig(level=logging.INFO)
+# Configure logging with more detail
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s'
+)
 logger = logging.getLogger(__name__)
 
 load_dotenv()
@@ -259,12 +262,14 @@ async def analyze_skin_condition(
     name: str = Form(...),
     duration: str = Form(...),
     symptoms: str = Form(...),
-    current_user: User = Depends(get_current_user)  # Add user authentication
+    current_user: User = Depends(get_current_user)
 ):
     """Endpoint to analyze skin condition from uploaded image."""
     try:
-        # Read and process the image
+        logger.info(f"📸 Analysis request from user: {current_user.email}")
         logger.info(f"Processing image upload for patient: {name}")
+        
+        # Read and process the image
         image_content = await image.read()
         image_base64 = f"data:image/jpeg;base64,{base64.b64encode(image_content).decode()}"
         
@@ -281,19 +286,19 @@ async def analyze_skin_condition(
         
         # Run the analysis workflow
         try:
-            logger.info("Starting analysis workflow")
+            logger.info("🔄 Starting analysis workflow")
             result = chain.invoke(initial_state)
-            logger.info("Analysis completed successfully")
+            logger.info("✅ Analysis completed successfully")
             return result["analysis"]
         except Exception as e:
-            logger.error(f"Analysis error: {str(e)}")
+            logger.error(f"❌ Analysis error: {str(e)}")
             raise HTTPException(
                 status_code=500,
                 detail=f"Error during analysis: {str(e)}. Please check your OpenAI API key and try again."
             )
             
     except Exception as e:
-        logger.error(f"Request processing error: {str(e)}")
+        logger.error(f"❌ Request processing error: {str(e)}")
         raise HTTPException(
             status_code=500,
             detail="Error processing request. Please try again."
@@ -306,49 +311,74 @@ async def signup(
     password: str = Form(...),
     full_name: str = Form(...)
 ):
+    logger.info(f"📝 Signup attempt for email: {email}")
     users_db = get_user_db()
+    
     if email in users_db:
+        logger.warning(f"❌ Signup failed: Email already registered - {email}")
         raise HTTPException(
             status_code=400,
             detail="Email already registered"
         )
     
-    hashed_password = get_password_hash(password)
-    user_dict = {
-        "email": email,
-        "full_name": full_name,
-        "hashed_password": hashed_password,
-        "disabled": False
-    }
-    
-    users_db[email] = user_dict
-    save_user_db(users_db)
-    
-    # Create access token
-    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    access_token = create_access_token(
-        data={"sub": email}, expires_delta=access_token_expires
-    )
-    
-    return {"access_token": access_token, "token_type": "bearer"}
+    try:
+        hashed_password = get_password_hash(password)
+        user_dict = {
+            "email": email,
+            "full_name": full_name,
+            "hashed_password": hashed_password,
+            "disabled": False
+        }
+        
+        users_db[email] = user_dict
+        save_user_db(users_db)
+        logger.info(f"✅ User created successfully: {email}")
+        
+        # Create access token
+        access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+        access_token = create_access_token(
+            data={"sub": email}, expires_delta=access_token_expires
+        )
+        logger.info(f"🎟️ Access token generated for: {email}")
+        
+        return {"access_token": access_token, "token_type": "bearer"}
+    except Exception as e:
+        logger.error(f"❌ Error during signup: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error during signup: {str(e)}"
+        )
 
 @app.post("/api/token")
 async def login(form_data: OAuth2PasswordRequestForm = Depends()):
-    user = authenticate_user(form_data.username, form_data.password)
-    if not user:
-        raise HTTPException(
-            status_code=401,
-            detail="Incorrect email or password",
-            headers={"WWW-Authenticate": "Bearer"},
+    logger.info(f"🔐 Login attempt for: {form_data.username}")
+    try:
+        user = authenticate_user(form_data.username, form_data.password)
+        if not user:
+            logger.warning(f"❌ Login failed: Invalid credentials for {form_data.username}")
+            raise HTTPException(
+                status_code=401,
+                detail="Incorrect email or password",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+        
+        access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+        access_token = create_access_token(
+            data={"sub": user.email}, expires_delta=access_token_expires
         )
-    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    access_token = create_access_token(
-        data={"sub": user.email}, expires_delta=access_token_expires
-    )
-    return {"access_token": access_token, "token_type": "bearer"}
+        logger.info(f"✅ Login successful for: {form_data.username}")
+        
+        return {"access_token": access_token, "token_type": "bearer"}
+    except Exception as e:
+        logger.error(f"❌ Error during login: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error during login: {str(e)}"
+        )
 
 @app.get("/api/users/me")
 async def read_users_me(current_user: User = Depends(get_current_user)):
+    logger.info(f"👤 User profile accessed: {current_user.email}")
     return current_user
 
 if __name__ == "__main__":
