@@ -13,8 +13,8 @@ export const auth = {
     formData.append('password', password);
 
     try {
-      console.log('📤 Sending login request to:', `${config.apiUrl}/api/token`);
-      const response = await fetch(`${config.apiUrl}/api/token`, {
+      console.log('📤 Sending login request to:', `${config.apiUrl}/token`);
+      const response = await fetch(`${config.apiUrl}/token`, {
         method: 'POST',
         body: formData,
       });
@@ -53,8 +53,8 @@ export const auth = {
     formData.append('full_name', fullName);
 
     try {
-      console.log('📤 Sending signup request to:', `${config.apiUrl}/api/signup`);
-      const response = await fetch(`${config.apiUrl}/api/signup`, {
+      console.log('📤 Sending signup request to:', `${config.apiUrl}/signup`);
+      const response = await fetch(`${config.apiUrl}/signup`, {
         method: 'POST',
         body: formData,
       });
