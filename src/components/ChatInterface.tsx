@@ -1,6 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Box, VStack, HStack, Input, Button, Text, Textarea, useToast, IconButton } from '@chakra-ui/react';
-import { AttachmentIcon, ArrowUpIcon } from '@chakra-ui/icons';
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { useToast } from "@/hooks/use-toast";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { MessageSquare, Paperclip, ArrowUp } from "lucide-react";
 
 interface Message {
   role: 'user' | 'assistant';
@@ -19,7 +22,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ aiReport }) => {
   const [attachedFiles, setAttachedFiles] = useState<File[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
-  const toast = useToast();
+  const { toast } = useToast();
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
@@ -117,75 +120,69 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ aiReport }) => {
   };
 
   return (
-    <Box
-      w="100%"
-      h="600px"
-      borderWidth="1px"
-      borderRadius="lg"
-      p={4}
-      bg="white"
-      boxShadow="md"
-    >
-      <VStack h="100%" spacing={4}>
+    <Card className="w-full h-[600px] p-4">
+      <CardHeader>
+        <CardTitle>Chat with AI Dermatologist</CardTitle>
+      </CardHeader>
+      <CardContent className="h-full flex flex-col space-y-4">
         {/* Chat Messages */}
-        <Box
+        <div
           ref={chatContainerRef}
-          flex="1"
-          w="100%"
-          overflowY="auto"
-          p={2}
-          borderWidth="1px"
-          borderRadius="md"
-          bg="gray.50"
+          className="flex-1 w-full overflow-y-auto p-2 space-y-4 border rounded-md bg-gray-50"
         >
           {messages.map((message, index) => (
-            <Box
+            <div
               key={index}
-              mb={4}
-              alignSelf={message.role === 'user' ? 'flex-end' : 'flex-start'}
+              className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
             >
-              <Box
-                maxW="80%"
-                bg={message.role === 'user' ? 'blue.500' : 'gray.200'}
-                color={message.role === 'user' ? 'white' : 'black'}
-                p={3}
-                borderRadius="lg"
+              <div
+                className={`max-w-[80%] p-3 rounded-lg ${
+                  message.role === 'user' 
+                    ? 'bg-primary text-primary-foreground' 
+                    : 'bg-muted'
+                }`}
               >
-                <Text>{message.content}</Text>
-                <Text fontSize="xs" color={message.role === 'user' ? 'white' : 'gray.500'} mt={1}>
+                <p>{message.content}</p>
+                <p className={`text-xs mt-1 ${
+                  message.role === 'user' 
+                    ? 'text-primary-foreground/80' 
+                    : 'text-muted-foreground'
+                }`}>
                   {message.timestamp.toLocaleTimeString()}
-                </Text>
-              </Box>
-            </Box>
+                </p>
+              </div>
+            </div>
           ))}
-        </Box>
+        </div>
 
         {/* Attached Files */}
         {attachedFiles.length > 0 && (
-          <Box w="100%">
-            <Text fontSize="sm" fontWeight="bold" mb={2}>
+          <div className="w-full">
+            <p className="text-sm font-semibold mb-2">
               Attached Files:
-            </Text>
+            </p>
             {attachedFiles.map((file, index) => (
-              <Text key={index} fontSize="sm" color="gray.600">
+              <p key={index} className="text-sm text-muted-foreground">
                 {file.name}
-              </Text>
+              </p>
             ))}
-          </Box>
+          </div>
         )}
 
         {/* Input Area */}
-        <HStack w="100%" spacing={2}>
-          <IconButton
-            aria-label="Attach file"
-            icon={<AttachmentIcon />}
+        <div className="flex gap-2">
+          <Button
+            size="icon"
+            variant="outline"
             onClick={() => fileInputRef.current?.click()}
-          />
+          >
+            <Paperclip className="h-4 w-4" />
+          </Button>
           <input
             type="file"
             ref={fileInputRef}
             onChange={handleFileUpload}
-            style={{ display: 'none' }}
+            className="hidden"
             multiple
           />
           <Textarea
@@ -193,19 +190,19 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ aiReport }) => {
             onChange={(e) => setInputMessage(e.target.value)}
             onKeyPress={handleKeyPress}
             placeholder="Type your message..."
-            resize="none"
+            className="resize-none"
             rows={2}
           />
-          <IconButton
-            aria-label="Send message"
-            icon={<ArrowUpIcon />}
+          <Button
+            size="icon"
             onClick={handleSendMessage}
-            isLoading={isLoading}
-            colorScheme="blue"
-          />
-        </HStack>
-      </VStack>
-    </Box>
+            disabled={isLoading}
+          >
+            <ArrowUp className="h-4 w-4" />
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
   );
 };
 
