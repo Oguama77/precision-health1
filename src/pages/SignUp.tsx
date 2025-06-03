@@ -1,51 +1,53 @@
 import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
+import { Link } from 'react-router-dom';
 
-const Login = () => {
-  const [credentials, setCredentials] = useState({
+const SignUp = () => {
+  const [formData, setFormData] = useState({
+    name: '',
     email: '',
     password: '',
+    confirmPassword: '',
   });
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
     try {
-      console.log('Login attempt with:', {
-        email: credentials.email,
-        passwordLength: credentials.password.length
+      // Validate passwords match
+      if (formData.password !== formData.confirmPassword) {
+        throw new Error('Passwords do not match');
+      }
+
+      // For demo purposes - in a real app, you would send this to your backend
+      console.log('Sign up attempt with:', {
+        name: formData.name,
+        email: formData.email,
+        passwordLength: formData.password.length
+      });
+
+      // Simulate successful signup
+      localStorage.setItem('isAuthenticated', 'true');
+      
+      toast({
+        title: "Sign Up Successful",
+        description: "Welcome to Precision Skin Insights!",
       });
       
-      // For demo purposes, using a simple check
-      // In a real app, you would validate against a backend
-      if (credentials.email.trim() === 'demo@example.com' && credentials.password === 'password123') {
-        console.log('Credentials match!');
-        // Store auth state
-        localStorage.setItem('isAuthenticated', 'true');
-        
-        toast({
-          title: "Login Successful",
-          description: "Welcome to Precision Skin Insights!",
-        });
-        
-        navigate('/');
-      } else {
-        console.log('Credentials do not match.');
-        throw new Error('Invalid credentials');
-      }
+      navigate('/');
     } catch (error) {
       toast({
-        title: "Login Failed",
-        description: error instanceof Error ? error.message : "Please check your credentials and try again.",
+        title: "Sign Up Failed",
+        description: error instanceof Error ? error.message : "Please check your information and try again.",
         variant: "destructive"
       });
     } finally {
@@ -71,10 +73,25 @@ const Login = () => {
 
           <Card className="border-purple-200 shadow-lg">
             <CardHeader className="bg-gradient-to-r from-[#613175] to-purple-600 text-white rounded-t-lg">
-              <CardTitle className="font-playfair text-center">Login</CardTitle>
+              <CardTitle className="font-playfair text-center">Create Account</CardTitle>
             </CardHeader>
             <CardContent className="p-6">
-              <form onSubmit={handleLogin} className="space-y-4">
+              <form onSubmit={handleSignUp} className="space-y-4">
+                <div>
+                  <Label htmlFor="name" className="text-gray-700 font-medium">
+                    Full Name
+                  </Label>
+                  <Input
+                    id="name"
+                    type="text"
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    className="mt-1 border-purple-200 focus:border-[#613175] focus:ring-[#613175]"
+                    placeholder="Enter your full name"
+                    required
+                  />
+                </div>
+
                 <div>
                   <Label htmlFor="email" className="text-gray-700 font-medium">
                     Email
@@ -82,8 +99,8 @@ const Login = () => {
                   <Input
                     id="email"
                     type="email"
-                    value={credentials.email}
-                    onChange={(e) => setCredentials({ ...credentials, email: e.target.value })}
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                     className="mt-1 border-purple-200 focus:border-[#613175] focus:ring-[#613175]"
                     placeholder="Enter your email"
                     required
@@ -97,10 +114,25 @@ const Login = () => {
                   <Input
                     id="password"
                     type="password"
-                    value={credentials.password}
-                    onChange={(e) => setCredentials({ ...credentials, password: e.target.value })}
+                    value={formData.password}
+                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                     className="mt-1 border-purple-200 focus:border-[#613175] focus:ring-[#613175]"
-                    placeholder="Enter your password"
+                    placeholder="Create a password"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="confirmPassword" className="text-gray-700 font-medium">
+                    Confirm Password
+                  </Label>
+                  <Input
+                    id="confirmPassword"
+                    type="password"
+                    value={formData.confirmPassword}
+                    onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+                    className="mt-1 border-purple-200 focus:border-[#613175] focus:ring-[#613175]"
+                    placeholder="Confirm your password"
                     required
                   />
                 </div>
@@ -113,17 +145,17 @@ const Login = () => {
                   {isLoading ? (
                     <div className="flex items-center gap-2">
                       <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                      Logging in...
+                      Creating Account...
                     </div>
                   ) : (
-                    'Login'
+                    'Sign Up'
                   )}
                 </Button>
 
-                <div className="text-center text-sm text-gray-600 mt-4">
-                  Don't have an account?{' '}
-                  <Link to="/signup" className="text-[#613175] hover:underline font-medium">
-                    Sign up here
+                <div className="text-center text-sm text-gray-600">
+                  Already have an account?{' '}
+                  <Link to="/login" className="text-[#613175] hover:underline font-medium">
+                    Login here
                   </Link>
                 </div>
               </form>
@@ -135,4 +167,4 @@ const Login = () => {
   );
 };
 
-export default Login; 
+export default SignUp; 
