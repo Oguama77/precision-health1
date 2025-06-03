@@ -1,73 +1,58 @@
-# Welcome to your Lovable project
+# Precision Skin Insights Backend
 
-## Project info
+This is the backend service for the Precision Skin Insights application, which provides AI-powered dermatological analysis using LangGraph and GPT-4 Vision.
 
-**URL**: https://lovable.dev/projects/23ad16b9-59e9-41dd-a811-390f6efa8e0b
+## Setup
 
-## How can I edit this code?
-
-There are several ways of editing your application.
-
-**Use Lovable**
-
-Simply visit the [Lovable Project](https://lovable.dev/projects/23ad16b9-59e9-41dd-a811-390f6efa8e0b) and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+1. Create a virtual environment:
+```bash
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
 ```
 
-**Edit a file directly in GitHub**
+2. Install dependencies:
+```bash
+pip install -r requirements.txt
+```
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+3. Create a `.env` file in the backend directory with your OpenAI API key:
+```
+OPENAI_API_KEY=your_api_key_here
+```
 
-**Use GitHub Codespaces**
+## Running the Server
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+Start the FastAPI server:
+```bash
+python main.py
+```
 
-## What technologies are used for this project?
+The server will run on `http://localhost:8000`.
 
-This project is built with:
+## API Endpoints
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+### POST /api/analyze
+Analyzes a skin condition from an uploaded image.
 
-## How can I deploy this project?
+**Request Body (multipart/form-data):**
+- `image`: Image file
+- `name`: Patient name
+- `duration`: Duration of symptoms
+- `symptoms`: Description of symptoms
 
-Simply open [Lovable](https://lovable.dev/projects/23ad16b9-59e9-41dd-a811-390f6efa8e0b) and click on Share -> Publish.
+**Response:**
+```json
+[
+  {
+    "condition": "string",
+    "confidence": number,
+    "severity": "string",
+    "description": "string",
+    "recommendations": ["string"]
+  }
+]
+```
 
-## Can I connect a custom domain to my Lovable project?
+## Integration with Frontend
 
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+The backend is configured to accept requests from the React frontend running on `http://localhost:5173`. CORS is enabled for this origin. 
