@@ -58,10 +58,20 @@ const Index = () => {
       formPayload.append('duration', formData.duration);
       formPayload.append('symptoms', formData.symptoms);
 
+      const token = localStorage.getItem('token');
+      if (!token) {
+        toast({
+          title: "Authentication Error",
+          description: "Please log in again to continue.",
+          variant: "destructive"
+        });
+        return;
+      }
+
       const response = await fetch(`${config.apiUrl}/api/analyze`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          'Authorization': `Bearer ${token}`
         },
         body: formPayload,
       });
@@ -74,6 +84,15 @@ const Index = () => {
         console.error('API Error Response:', errorText);
         try {
           const errorData = JSON.parse(errorText);
+          if (errorData.detail === "Could not validate credentials") {
+            toast({
+              title: "Session Expired",
+              description: "Please log in again to continue.",
+              variant: "destructive"
+            });
+            // Optionally redirect to login page or handle re-authentication
+            return;
+          }
           throw new Error(errorData.detail || 'Analysis failed');
         } catch (parseError) {
           throw new Error(`Analysis failed: ${errorText}`);

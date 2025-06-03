@@ -16,6 +16,9 @@ export const auth = {
       console.log('📤 Sending login request to:', `${config.apiUrl}/token`);
       const response = await fetch(`${config.apiUrl}/token`, {
         method: 'POST',
+        headers: {
+          'Accept': 'application/json',
+        },
         body: formData,
       });
 
@@ -28,15 +31,20 @@ export const auth = {
         try {
           const errorJson = JSON.parse(responseText);
           errorDetail = errorJson.detail;
+          console.error('❌ Login error details:', errorJson);
         } catch (e) {
           errorDetail = responseText;
+          console.error('❌ Login error raw text:', responseText);
         }
-        console.error('❌ Login failed:', errorDetail);
         throw new Error(errorDetail || 'Failed to login');
       }
 
       const data = JSON.parse(responseText);
       console.log('✅ Login successful, token received');
+      if (!data.access_token) {
+        console.error('❌ No access token in response:', data);
+        throw new Error('No access token received');
+      }
       localStorage.setItem('token', data.access_token);
       return data;
     } catch (error) {
