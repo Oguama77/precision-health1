@@ -1,11 +1,11 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { Link } from 'react-router-dom';
+import { auth } from '@/lib/auth';
 
 const SignUp = () => {
   const [formData, setFormData] = useState({
@@ -28,15 +28,7 @@ const SignUp = () => {
         throw new Error('Passwords do not match');
       }
 
-      // For demo purposes - in a real app, you would send this to your backend
-      console.log('Sign up attempt with:', {
-        name: formData.name,
-        email: formData.email,
-        passwordLength: formData.password.length
-      });
-
-      // Simulate successful signup
-      localStorage.setItem('isAuthenticated', 'true');
+      await auth.signup(formData.email, formData.password, formData.name);
       
       toast({
         title: "Sign Up Successful",

@@ -61,9 +61,18 @@ const Index = () => {
         body: formPayload,
       });
 
+      console.log('API Response Status:', response.status);
+      console.log('API URL being used:', `${config.apiUrl}/api/analyze`);
+
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ detail: 'Failed to analyze image' }));
-        throw new Error(errorData.detail || 'Analysis failed');
+        const errorText = await response.text();
+        console.error('API Error Response:', errorText);
+        try {
+          const errorData = JSON.parse(errorText);
+          throw new Error(errorData.detail || 'Analysis failed');
+        } catch (parseError) {
+          throw new Error(`Analysis failed: ${errorText}`);
+        }
       }
 
       const results = await response.json();
@@ -206,6 +215,10 @@ const Index = () => {
       </header>
 
       <div className="container mx-auto px-4 py-8 max-w-4xl">
+        {/* Temporary debug element */}
+        <div className="bg-gray-100 p-4 mb-4 rounded">
+          <p>Debug - API URL: {config.apiUrl}</p>
+        </div>
         {isAnalyzing ? (
           <div className="flex flex-col items-center justify-center space-y-4 min-h-[400px]">
             <div className="w-16 h-16 border-4 border-purple-200 border-t-[#613175] rounded-full animate-spin"></div>

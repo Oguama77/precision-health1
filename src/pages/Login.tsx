@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
+import { auth } from '@/lib/auth';
 
 const Login = () => {
   const [credentials, setCredentials] = useState({
@@ -20,28 +21,14 @@ const Login = () => {
     setIsLoading(true);
 
     try {
-      console.log('Login attempt with:', {
-        email: credentials.email,
-        passwordLength: credentials.password.length
+      await auth.login(credentials.email, credentials.password);
+      
+      toast({
+        title: "Login Successful",
+        description: "Welcome to Precision Skin Insights!",
       });
       
-      // For demo purposes, using a simple check
-      // In a real app, you would validate against a backend
-      if (credentials.email.trim() === 'demo@example.com' && credentials.password === 'password123') {
-        console.log('Credentials match!');
-        // Store auth state
-        localStorage.setItem('isAuthenticated', 'true');
-        
-        toast({
-          title: "Login Successful",
-          description: "Welcome to Precision Skin Insights!",
-        });
-        
-        navigate('/');
-      } else {
-        console.log('Credentials do not match.');
-        throw new Error('Invalid credentials');
-      }
+      navigate('/');
     } catch (error) {
       toast({
         title: "Login Failed",
