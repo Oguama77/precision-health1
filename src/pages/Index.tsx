@@ -60,6 +60,9 @@ const Index = () => {
 
       const response = await fetch(`${config.apiUrl}/api/analyze`, {
         method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
         body: formPayload,
       });
 
