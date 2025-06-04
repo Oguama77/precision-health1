@@ -47,6 +47,7 @@ export const auth = {
         throw new Error('No access token received');
       }
       localStorage.setItem('token', data.access_token);
+      localStorage.setItem('isAuthenticated', 'true');
       return data;
     } catch (error) {
       console.error('❌ Login error:', error);

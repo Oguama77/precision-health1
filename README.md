@@ -1,13 +1,71 @@
-# Precision Health
+# Precision Health AI - Backend
 
-This is the code base for the Precision Health application, which provides AI-powered dermatological analysis using LangGraph and GPT-4 Vision.
+A modular FastAPI application for AI-powered skin analysis.
 
-## Setup
+## Project Structure
+
+```
+backend/
+├── app/
+│   ├── __init__.py
+│   ├── main.py              # FastAPI app initialization
+│   ├── core/
+│   │   ├── __init__.py
+│   │   ├── config.py        # Configuration and environment variables
+│   │   └── security.py      # Authentication and security utilities
+│   ├── models/
+│   │   ├── __init__.py
+│   │   └── user.py          # Pydantic models for data structures
+│   ├── schemas/
+│   │   ├── __init__.py
+│   │   ├── analysis.py      # Request/response schemas for analysis
+│   │   └── user.py          # Request/response schemas for users
+│   ├── services/
+│   │   ├── __init__.py
+│   │   ├── analysis_service.py  # Business logic for image analysis
+│   │   └── user_service.py      # Business logic for user management
+│   ├── routes/
+│   │   ├── __init__.py
+│   │   ├── auth.py          # Authentication endpoints
+│   │   └── analysis.py      # Analysis endpoints
+│   └── utils/
+│       ├── __init__.py
+│       └── logging.py       # Logging utilities
+├── run.py                   # Application entry point
+├── requirements.txt         # Python dependencies
+└── users.json              # User data storage (JSON file)
+```
+
+## Architecture Overview
+
+### Core Layer
+- **config.py**: Environment variables, configuration settings
+- **security.py**: Authentication, JWT tokens, password hashing
+
+### Models Layer
+- **user.py**: User data models and token models
+
+### Schemas Layer
+- **analysis.py**: API request/response schemas for analysis endpoints
+- **user.py**: API request/response schemas for user endpoints
+
+### Services Layer
+- **analysis_service.py**: Business logic for image processing and AI analysis
+- **user_service.py**: Business logic for user management and authentication
+
+### Routes Layer
+- **auth.py**: Authentication endpoints (login, signup, user info)
+- **analysis.py**: Image analysis endpoints
+
+### Utils Layer
+- **logging.py**: Logging configuration and utilities
+
+## Installation
 
 1. Create a virtual environment:
 ```bash
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+python3 -m venv .venv
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
 ```
 
 2. Install dependencies:
@@ -15,43 +73,57 @@ source venv/bin/activate  # On Windows: venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-3. Create a `.env` file in the backend directory with your OpenAI API key:
+3. Create a `.env` file with your configuration:
 ```
-OPENAI_API_KEY=your_api_key_here
+OPENAI_API_KEY=your_openai_api_key_here
+SECRET_KEY=your_secret_key_here
 ```
 
-## Running the Server
+## Running the Application
 
-Start the FastAPI server:
+### Development Mode (with auto-reload)
 ```bash
-python main.py
+python run.py
 ```
 
-The server will run on `http://localhost:8000`.
+### Production Mode
+```bash
+uvicorn app.main:app --host 0.0.0.0 --port 8001
+```
 
 ## API Endpoints
 
-### POST /api/analyze
-Analyzes a skin condition from an uploaded image.
+### Authentication
+- `POST /token` - Login and get access token
+- `POST /signup` - Register new user
+- `GET /users/me` - Get current user information
 
-**Request Body (multipart/form-data):**
-- `image`: Image file
-- `name`: Patient name
-- `duration`: Duration of symptoms
-- `symptoms`: Description of symptoms
+### Analysis
+- `POST /api/analyze` - Analyze uploaded skin image
 
-**Response:**
-```json
-[
-  {
-    "condition": "string",
-    "confidence": number,
-    "severity": "string",
-    "description": "string",
-    "recommendations": ["string"]
-  }
-]
-```
+### Health Check
+- `GET /` - Root endpoint with API information
+- `GET /health` - Health check endpoint
+
+## Features
+
+- **Modular Architecture**: Clean separation of concerns
+- **Authentication**: JWT-based authentication with bcrypt password hashing
+- **Image Analysis**: AI-powered skin condition analysis using OpenAI's GPT-4 Vision
+- **CORS Support**: Configured for frontend integration
+- **Error Handling**: Comprehensive error handling and logging
+- **Type Safety**: Full type hints using Pydantic models
+- **Auto-documentation**: Automatic API documentation with FastAPI/Swagger
+
+## Development
+
+The application uses a modular structure that makes it easy to:
+- Add new endpoints by creating new route files
+- Add new business logic by creating new service files
+- Extend data models by adding new model/schema files
+- Add utility functions in the utils package
+
+Each module has a specific responsibility, making the codebase maintainable and testable.
 
 ## Integration with Frontend
 
