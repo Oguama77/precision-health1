@@ -1,8 +1,6 @@
-from fastapi import APIRouter, Depends, UploadFile, File, Form
-from ..models.user import User
+from fastapi import APIRouter, UploadFile, File, Form
 from ..schemas.analysis import AnalysisResponse
 from ..services.analysis_service import analyze_skin_image
-from ..core.security import get_current_user
 
 router = APIRouter()
 
@@ -11,8 +9,7 @@ async def analyze_image(
     image: UploadFile = File(...),
     name: str = Form(""),
     duration: str = Form(""),
-    symptoms: str = Form(""),
-    current_user: User = Depends(get_current_user)
+    symptoms: str = Form("")
 ):
     """Analyze uploaded skin image with patient information."""
     # Read the image contents
@@ -26,6 +23,6 @@ async def analyze_image(
     }
     
     # Call the analysis service
-    result = await analyze_skin_image(contents, current_user.username, patient_info)
+    result = await analyze_skin_image(contents, "anonymous", patient_info)
     
     return result
