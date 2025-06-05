@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from .core.config import CORS_ORIGINS
-from .routes import auth, analysis
+from .routes import analysis
 from .utils.logging import setup_logging
 
 # Setup logging
@@ -26,7 +26,6 @@ app.add_middleware(
 )
 
 # Include routers
-app.include_router(auth.router, tags=["authentication"])
 app.include_router(analysis.router, tags=["analysis"])
 
 @app.get("/")
